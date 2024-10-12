@@ -27,35 +27,39 @@ function Signup() {
     const handleSignup = async (e) => {
         e.preventDefault();
         const { name, email, password } = signupInfo;
+    
         if (!name || !email || !password) {
-            return handleError('name, email and password are required')
+            return handleError('Name, email, and password are required');
         }
+    
         try {
-            const url = `https://form-react-backend.vercel.app/auth/signup`;
-            const response = await fetch(url, {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(signupInfo)
+            const response = await fetch('https://form-react-backend.vercel.app/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(signupInfo),
             });
-            const result = await response.json();
-            const { success, message, error } = result;
-            if (success) {
-                handleSuccess(message);
-                setTimeout(() => {
-                    navigate('/login')
-                }, 1000)
-            } else if (error) {
-                handleError(error);
-            } else if (!success) {
-                handleError(message);
+    
+            const contentType = response.headers.get('content-type');
+            const result = contentType && contentType.includes('application/json') 
+                ? await response.json() 
+                : await response.text();
+    
+            if (!response.ok) {
+                console.error('Error response:', result);
+                return handleError(typeof result === 'string' ? result : result.error || 'Signup failed.');
             }
-            console.log(result);
+    
+            console.log('Success response:', result);
+            handleSuccess(typeof result === 'string' ? result : result.message || 'Signup successful');
+    
+            // Navigate to the login page after a short delay
+            setTimeout(() => navigate('/login'), 1000);
         } catch (err) {
-            handleError(err);
+            console.error('Fetch failed:', err);
+            handleError('An unexpected error occurred.');
         }
-    }
+    };
+    
 
     return (
         <div className="container">
